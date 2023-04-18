@@ -162,8 +162,11 @@ class AlgoliaIndexer
             'objectCreated' => $item->dbObject('Created')->getTimestamp()
         ];
 
+        //Asset subclasses would have Link instead of AbsoluteLink
         if ($item->hasMethod('AbsoluteLink')) {
             $toIndex['objectLink'] = str_replace(['?stage=Stage', '?stage=Live'], '', $item->AbsoluteLink());
+        }elseif(method_exists($item,'Link')){
+            $toIndex['objectLink'] = str_replace(['?stage=Stage', '?stage=Live'], '', $item->Link());
         }
 
         if ($item && $item->hasMethod('exportObjectToAlgolia')) {
@@ -282,7 +285,7 @@ class AlgoliaIndexer
         try {
             $data = [];
 
-            $related = $item->{$relationship}();
+            $related = $item->relObject($relationship);
 
             if (!$related || !$related->exists()) {
                 return;
