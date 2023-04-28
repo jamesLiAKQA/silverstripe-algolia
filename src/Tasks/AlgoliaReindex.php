@@ -245,8 +245,9 @@ class AlgoliaReindex extends BuildTask
                         $data = $data->toArray();
                     }
 
+                    $data['originalItem'] = $item;
+
                     $currentBatches[$batchKey][] = $data;
-                    $item->touchAlgoliaIndexedDate();
                     $count++;
                 } catch (Throwable $e) {
                     Injector::inst()->get(LoggerInterface::class)->warning($e->getMessage());
@@ -309,6 +310,12 @@ class AlgoliaReindex extends BuildTask
 
         try {
             foreach ($indexes as $index) {
+                $originalObjects = [];
+                foreach($items as $key =>$item){
+                    $originalObjects[] = $item['originalItem'];
+                    unset($items[$key]['originalItem']);
+                }
+
                 $result = $index->saveObjects($items, [
                     'autoGenerateObjectIDIfNotExist' => true
                 ]);
@@ -316,8 +323,11 @@ class AlgoliaReindex extends BuildTask
                 if (!$result->valid()) {
                     return false;
                 }
-            }
 
+                foreach($originalObjects as $originalObject){
+                    $originalObject->touchAlgoliaIndexedDate();
+                }
+            }
             return true;
         } catch (Throwable $e) {
             Injector::inst()->create(LoggerInterface::class)->error($e);
