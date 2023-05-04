@@ -176,6 +176,14 @@ class AlgoliaIndexer
         if ($this->config()->get('include_page_content')) {
             $toIndex['objectForTemplate'] =
                 Injector::inst()->create(AlgoliaPageCrawler::class, $item)->getMainContent();
+
+            if(mb_strlen($toIndex['objectForTemplate'], '8bit') > 100000){
+                $toIndex['objectForTemplate'] = $fieldData = mb_strcut(
+                    $toIndex['objectForTemplate'],
+                    0,
+                    90000
+                );
+            }
         }
 
         $item->invokeWithExtensions('onBeforeAttributesFromObject');
